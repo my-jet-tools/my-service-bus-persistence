@@ -1,0 +1,9 @@
+{
+  "devDependencies": {
+    "gulp": "^4.0.2",
+    "gulp-concat": "^2.6.1"
+  },
+  "dependencies": {
+    "gulp-js-minify": "^0.0.3"
+  }
+}

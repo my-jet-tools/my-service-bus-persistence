@@ -1,0 +1,671 @@
+{
+  "x-generator": "NSwag v13.11.1.0 (NJsonSchema v10.4.3.0 (Newtonsoft.Json v13.0.0.0))",
+  "swagger": "2.0",
+  "info": {
+    "title": "MyServiceBus-Persistence",
+    "version": "***VERSION***"
+  },
+  "host": "***HOST***",
+  "schemes": [
+    "***SCHEME***"
+  ],
+  "paths": {
+    "/api/isalive": {
+      "get": {
+        "tags": [
+          "Api"
+        ],
+        "operationId": "Api_Index",
+        "responses": {
+          "200": {
+            "x-nullable": true,
+            "description": "",
+            "schema": {
+              "type": "file"
+            }
+          }
+        }
+      }
+    },
+    "/api/status": {
+      "get": {
+        "tags": [
+          "Api"
+        ],
+        "operationId": "Api_Status",
+        "responses": {
+          "200": {
+            "x-nullable": true,
+            "description": "",
+            "schema": {
+              "type": "file"
+            }
+          }
+        }
+      }
+    },
+    "/CacheCommands/Compress": {
+      "post": {
+        "tags": [
+          "CacheCommands"
+        ],
+        "operationId": "CacheCommands_Compress",
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "type": "string",
+            "name": "topicId",
+            "in": "formData",
+            "x-nullable": true
+          },
+          {
+            "type": "integer",
+            "name": "pageId",
+            "in": "formData",
+            "format": "int64",
+            "x-nullable": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "x-nullable": false,
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/CompressPageResult"
+            }
+          }
+        }
+      }
+    },
+    "/CacheCommands/Message": {
+      "get": {
+        "tags": [
+          "CacheCommands"
+        ],
+        "operationId": "CacheCommands_GetMessage",
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "type": "string",
+            "name": "topicId",
+            "in": "query",
+            "x-nullable": true
+          },
+          {
+            "type": "integer",
+            "name": "messageId",
+            "in": "query",
+            "format": "int64",
+            "x-nullable": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "x-nullable": false,
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/MessageContentModel"
+            }
+          }
+        }
+      }
+    },
+    "/CacheCommands/MessageFromLegacy": {
+      "get": {
+        "tags": [
+          "CacheCommands"
+        ],
+        "operationId": "CacheCommands_GetMessageFromLegacy",
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "type": "string",
+            "name": "topicId",
+            "in": "query",
+            "x-nullable": true
+          },
+          {
+            "type": "integer",
+            "name": "messageId",
+            "in": "query",
+            "format": "int64",
+            "x-nullable": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "x-nullable": false,
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/MessageContentModel"
+            }
+          }
+        }
+      }
+    },
+    "/CacheCommands/ConvertToNewPageCluster": {
+      "get": {
+        "tags": [
+          "CacheCommands"
+        ],
+        "operationId": "CacheCommands_ConvertToNewPageCluster",
+        "parameters": [
+          {
+            "type": "string",
+            "name": "topicId",
+            "in": "query",
+            "x-nullable": true
+          },
+          {
+            "type": "integer",
+            "name": "clusterPageId",
+            "in": "query",
+            "format": "int64",
+            "x-nullable": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/Debug/Page": {
+      "get": {
+        "tags": [
+          "Debug"
+        ],
+        "operationId": "Debug_Index",
+        "parameters": [
+          {
+            "type": "string",
+            "name": "topicId",
+            "in": "query",
+            "x-nullable": true
+          },
+          {
+            "type": "integer",
+            "name": "pageId",
+            "in": "query",
+            "format": "int64",
+            "x-nullable": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "x-nullable": true,
+            "description": "",
+            "schema": {
+              "type": "file"
+            }
+          }
+        }
+      }
+    },
+    "/Debug/GetWriters": {
+      "get": {
+        "tags": [
+          "Debug"
+        ],
+        "operationId": "Debug_GetWriters",
+        "parameters": [
+          {
+            "type": "string",
+            "name": "topicId",
+            "in": "query",
+            "x-nullable": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "x-nullable": true,
+            "description": "",
+            "schema": {
+              "type": "file"
+            }
+          }
+        }
+      }
+    },
+    "/Debug/SetDebugMode": {
+      "post": {
+        "tags": [
+          "Debug"
+        ],
+        "operationId": "Debug_SetTopicInDebugMode",
+        "parameters": [
+          {
+            "type": "string",
+            "name": "topicId",
+            "in": "query",
+            "x-nullable": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "x-nullable": true,
+            "description": "",
+            "schema": {
+              "type": "file"
+            }
+          }
+        }
+      }
+    },
+    "/Debug/Download": {
+      "get": {
+        "tags": [
+          "Debug"
+        ],
+        "operationId": "Debug_Download",
+        "parameters": [
+          {
+            "type": "string",
+            "name": "topicId",
+            "in": "query",
+            "x-nullable": true
+          },
+          {
+            "type": "integer",
+            "name": "pageId",
+            "in": "query",
+            "format": "int64",
+            "x-nullable": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "x-nullable": true,
+            "description": "",
+            "schema": {
+              "type": "file"
+            }
+          }
+        }
+      }
+    },
+    "/logs": {
+      "get": {
+        "tags": [
+          "Logs"
+        ],
+        "operationId": "Logs_Logs",
+        "responses": {
+          "200": {
+            "x-nullable": true,
+            "description": "",
+            "schema": {
+              "type": "file"
+            }
+          }
+        }
+      }
+    },
+    "/logs/{logProcess}": {
+      "get": {
+        "tags": [
+          "Logs"
+        ],
+        "operationId": "Logs_Logs2",
+        "parameters": [
+          {
+            "type": "integer",
+            "name": "logProcess",
+            "in": "path",
+            "required": true,
+            "x-schema": {
+              "$ref": "#/definitions/LogProcess"
+            },
+            "x-nullable": false,
+            "enum": [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "x-nullable": true,
+            "description": "",
+            "schema": {
+              "type": "file"
+            }
+          }
+        }
+      }
+    },
+    "/logs/topic/{topic}": {
+      "get": {
+        "tags": [
+          "Logs"
+        ],
+        "operationId": "Logs_Logs3",
+        "parameters": [
+          {
+            "type": "string",
+            "name": "topic",
+            "in": "path",
+            "required": true,
+            "x-nullable": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "x-nullable": true,
+            "description": "",
+            "schema": {
+              "type": "file"
+            }
+          }
+        }
+      }
+    },
+    "/read/byId": {
+      "get": {
+        "tags": [
+          "Read"
+        ],
+        "operationId": "Read_ById",
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "type": "string",
+            "name": "topicId",
+            "in": "query",
+            "x-nullable": true
+          },
+          {
+            "type": "integer",
+            "name": "messageId",
+            "in": "query",
+            "format": "int64",
+            "x-nullable": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "x-nullable": false,
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/ApiResultContractOfMessageRestApiModel"
+            }
+          }
+        }
+      }
+    },
+    "/read/listFromDate": {
+      "post": {
+        "tags": [
+          "Read"
+        ],
+        "operationId": "Read_ListFromDate",
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "type": "string",
+            "name": "topicId",
+            "in": "query",
+            "x-nullable": true
+          },
+          {
+            "type": "string",
+            "name": "fromDate",
+            "in": "query",
+            "format": "date-time",
+            "x-nullable": false
+          },
+          {
+            "type": "integer",
+            "name": "maxAmount",
+            "in": "query",
+            "format": "int32",
+            "x-nullable": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "x-nullable": false,
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/ApiResultContractOfIEnumerableOfMessageRestApiModel"
+            }
+          },
+          "403": {
+            "x-nullable": false,
+            "description": "",
+            "schema": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "/read/listFromMessageId": {
+      "post": {
+        "tags": [
+          "Read"
+        ],
+        "operationId": "Read_ListFromMessageId",
+        "produces": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "parameters": [
+          {
+            "type": "string",
+            "name": "topicId",
+            "in": "query",
+            "x-nullable": true
+          },
+          {
+            "type": "integer",
+            "name": "messageId",
+            "in": "query",
+            "format": "int64",
+            "x-nullable": false
+          },
+          {
+            "type": "integer",
+            "name": "maxAmount",
+            "in": "query",
+            "format": "int32",
+            "x-nullable": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "x-nullable": false,
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/ApiResultContractOfIEnumerableOfMessageRestApiModel"
+            }
+          },
+          "403": {
+            "x-nullable": false,
+            "description": "",
+            "schema": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "/topic": {
+      "delete": {
+        "tags": [
+          "Topic"
+        ],
+        "operationId": "Topic_Delete",
+        "parameters": [
+          {
+            "type": "string",
+            "name": "topicId",
+            "in": "query",
+            "x-nullable": true
+          },
+          {
+            "type": "string",
+            "name": "apiKey",
+            "in": "query",
+            "x-nullable": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "x-nullable": true,
+            "description": "",
+            "schema": {
+              "type": "file"
+            }
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "CompressPageResult": {
+      "type": "object",
+      "properties": {
+        "result": {
+          "type": "string"
+        }
+      }
+    },
+    "MessageContentModel": {
+      "type": "object",
+      "required": [
+        "id",
+        "pageSize"
+      ],
+      "properties": {
+        "created": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "id": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "content": {
+          "type": "string"
+        },
+        "pageSize": {
+          "type": "integer",
+          "format": "int32"
+        }
+      }
+    },
+    "LogProcess": {
+      "type": "integer",
+      "description": "",
+      "x-enumNames": [
+        "All",
+        "System",
+        "PagesCompressor",
+        "PagesLoaderOrGc",
+        "MinuteIndexWriter",
+        "NewMessages",
+        "Debug"
+      ],
+      "enum": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ]
+    },
+    "ApiResultContractOfMessageRestApiModel": {
+      "type": "object",
+      "required": [
+        "result"
+      ],
+      "properties": {
+        "result": {
+          "$ref": "#/definitions/ApiResult"
+        },
+        "data": {
+          "$ref": "#/definitions/MessageRestApiModel"
+        }
+      }
+    },
+    "ApiResult": {
+      "type": "integer",
+      "description": "",
+      "x-enumNames": [
+        "Ok",
+        "RecordNotFound"
+      ],
+      "enum": [
+        0,
+        1
+      ]
+    },
+    "MessageRestApiModel": {
+      "type": "object",
+      "required": [
+        "id",
+        "created"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "created": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "content": {
+          "type": "string"
+        }
+      }
+    },
+    "ApiResultContractOfIEnumerableOfMessageRestApiModel": {
+      "type": "object",
+      "required": [
+        "result"
+      ],
+      "properties": {
+        "result": {
+          "$ref": "#/definitions/ApiResult"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/MessageRestApiModel"
+          }
+        }
+      }
+    }
+  }
+}

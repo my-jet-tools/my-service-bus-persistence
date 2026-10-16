@@ -1,0 +1,76 @@
+[package]
+name = "my-sb-persistence"
+version = "2.2.6"
+authors = ["Andrey <amigin@gmail.com>"]
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+my-service-bus = { tag = "1.1.6", git = "https://github.com/MyJetTools/my-service-bus-sdk.git", features = [
+    "shared",
+
+] }
+my-s3 = { tag = "0.1.0", git = "https://github.com/MyJetTools/my-s3.git" }
+
+
+my-http-server = { tag = "0.9.0", git = "https://github.com/MyJetTools/my-http-server.git", features = [
+    "static-files",
+    "controllers",
+    "macros",
+] }
+my-http-utils = { tag = "0.1.0", git = "https://github.com/MyJetTools/my-http-utils.git", features = [
+    "server",
+] }
+
+rust-extensions = { tag = "0.1.5", git = "https://github.com/MyJetTools/rust-extensions.git", features = [
+    "base64",
+] }
+
+my-logger = { tag = "1.3.0", git = "https://github.com/MyJetTools/my-logger.git" }
+
+my-grpc-extensions = { tag = "0.7.0", git = "https://github.com/MyJetTools/my-grpc-extensions.git", features = [
+    "grpc-server",
+] }
+
+tonic = { version = "*" }
+tonic-prost = "*"
+# Inflates an archived sub page a piece at a time. The same backend the SDK compresses with.
+flate2 = { version = "*", default-features = false, features = ["zlib-rs"] }
+tokio = { version = "*", features = ["full"] }
+tokio-util = "*"
+chrono = "*"
+lazy_static = "*"
+serde = { version = "*", features = ["derive"] }
+serde_json = "*"
+serde_derive = "*"
+serde_yaml = "*"
+base64 = "*"
+md5 = "*"
+anyhow = "*"
+futures-core = "*"
+prost = "*"
+prost-types = "*"
+tokio-stream = "*"
+async-trait = "*"
+futures-util = "*"
+tokio-signal = "*"
+signal-hook = "*"
+rand = "*"
+sysinfo = "*"
+prometheus = "*"
+futures = "*"
+arc-swap = "*"
+parking_lot = "*"
+ahash = "*"
+
+# Production runs on Linux only; other platforms (macOS dev builds) use the system allocator.
+# Kept prefixed (no `unprefixed_malloc_on_supported_platforms`): the tuning symbol in main.rs is
+# `_rjem_malloc_conf`, and it only takes effect while the prefix is on.
+[target.'cfg(target_os = "linux")'.dependencies]
+tikv-jemallocator = "*"
+
+[build-dependencies]
+# No `with-tls`: the proto is compiled from the local copy (see build.rs), so the build script
+# downloads nothing and does not pull fl-url in at all.
+ci-utils = { git = "https://github.com/MyJetTools/ci-utils.git", tag = "0.1.3" }

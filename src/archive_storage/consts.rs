@@ -1,0 +1,14 @@
+use my_service_bus::shared::sub_page::SUB_PAGE_MESSAGES_AMOUNT;
+
+pub const TOC_STRUCTURE_SIZE: usize = 12;
+
+pub const ARCHIVE_MESSAGES_PER_FILE: usize = 10_000_000;
+
+pub const ARCHIVE_SUB_PAGES_PER_FILE: usize =
+    ARCHIVE_MESSAGES_PER_FILE / SUB_PAGE_MESSAGES_AMOUNT as usize;
+
+pub const TOC_SIZE_IN_BITES: usize = ARCHIVE_SUB_PAGES_PER_FILE * TOC_STRUCTURE_SIZE;
+
+pub const CALCULATED_TOC_PAGES_AMOUNT: usize = TOC_SIZE_IN_BITES / 512 + 1;
+
+pub const TOC_SIZE: usize = (CALCULATED_TOC_PAGES_AMOUNT * 512) as usize;

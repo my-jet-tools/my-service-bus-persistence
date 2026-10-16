@@ -1,0 +1,130 @@
+syntax = "proto3";
+import "google/protobuf/empty.proto";
+package persistence;
+
+// Namespace: missing or empty value means the "default" namespace - exactly what a client
+// which knows nothing about namespaces sends. Compatible both ways: an old node does not send
+// the field and lands in default, an old persistence ignores the field.
+
+
+enum QueueTypePersistenceGrpcEnum {
+   Permanent = 0;
+   AutoDelete = 1;
+   PermanentWithSingleConnection = 2;
+}
+
+message QueueIndexRangeGrpcModel {
+  int64 FromId = 1;
+  int64 ToId = 2;
+}
+
+message QueueSnapshotGrpcModel {
+  string QueueId = 1;
+  repeated persistence.QueueIndexRangeGrpcModel Ranges = 2;
+  persistence.QueueTypePersistenceGrpcEnum QueueType = 3;
+}
+
+
+
+message TopicAndQueuesSnapshotGrpcModel {
+  string TopicId = 1;
+  int64 MessageId = 2;
+  repeated persistence.QueueSnapshotGrpcModel QueueSnapshots = 3;
+  optional bool Persist = 4;
+  int64 Deleted = 5;
+  optional string Namespace = 6;
+}
+
+
+///////////
+
+message GetHistoryByDateGrpcRequest {
+  string TopicId = 1;
+  int64 FromDateTime = 2;
+  optional string Namespace = 3;
+}
+
+message SaveMessagesGrpcRequest{
+  string TopicId = 1;
+  repeated MessageContentGrpcModel Messages = 2;
+  optional string Namespace = 3;
+}
+
+message MessageContentGrpcModel {
+  int64 MessageId = 1;
+  int64 Created = 2;
+  bytes Data = 3;
+  repeated persistence.MessageContentMetaDataItem MetaData = 4;
+}
+
+message MessageContentMetaDataItem {
+  string Key = 1;
+  string Value = 2;
+}
+
+//////////////
+
+
+message CompressedMessageChunkModel {
+  bytes Chunk = 1;
+}
+
+message UnCompressedMessageChunkModel {
+  bytes Chunk = 1;
+}
+
+message GetMessageGrpcRequest {
+  string TopicId = 1;
+  int64 MessageId = 2;
+  optional string Namespace = 3;
+}
+
+message GetPageCompressedGrpcRequest {
+  string TopicId = 1;
+  int64 PageNo = 2;
+  int64 FromMessageId = 3;
+  int64 ToMessageId = 4;
+  int32 Version = 5;
+  optional string Namespace = 6;
+}
+
+message GetPageGrpcRequest {
+  string TopicId = 1;
+  int64 PageNo = 2;
+  int64 FromMessageId = 3;
+  int64 ToMessageId = 4;
+  int32 Version = 5;
+  optional string Namespace = 6;
+}
+
+message GetVersionGrpcResponse{
+  string Version = 1;
+}
+
+message HardDeleteTopicGrpcRequest {
+  string TopicId = 1;
+  optional string Namespace = 2;
+}
+
+message GetSubPageGrpcRequest{
+  string TopicId = 1;
+  int64 SubPageNo = 2;
+  optional string Namespace = 3;
+}
+
+service MyServiceBusMessagesPersistenceGrpcService {
+
+   rpc GetQueueSnapshot(google.protobuf.Empty) returns (stream TopicAndQueuesSnapshotGrpcModel);
+   rpc SaveQueueSnapshot(stream TopicAndQueuesSnapshotGrpcModel) returns (google.protobuf.Empty);
+
+   rpc GetHistoryByDate(GetHistoryByDateGrpcRequest) returns (stream persistence.MessageContentGrpcModel);
+
+   rpc GetVersion(google.protobuf.Empty) returns (GetVersionGrpcResponse);
+   rpc GetMessage(GetMessageGrpcRequest) returns (MessageContentGrpcModel);
+   rpc GetPageCompressed(GetPageCompressedGrpcRequest) returns (stream CompressedMessageChunkModel);
+   rpc GetPage(GetPageGrpcRequest) returns (stream MessageContentGrpcModel);
+   rpc GetSubPage(GetSubPageGrpcRequest) returns (stream MessageContentGrpcModel);
+   rpc SaveMessages(stream SaveMessagesGrpcRequest) returns (google.protobuf.Empty);
+   rpc HardDeleteTopic(HardDeleteTopicGrpcRequest) returns (google.protobuf.Empty);
+   rpc Ping(google.protobuf.Empty) returns (google.protobuf.Empty);
+}

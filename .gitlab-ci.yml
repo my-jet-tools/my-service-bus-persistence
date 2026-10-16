@@ -1,0 +1,34 @@
+stages:
+  - test
+  - publish
+
+variables:
+  BUILD_FOLDER: target/release/my-sb-persistence
+  DOCKER_IMAGE_TAG: amigin/my-sb-persistence
+
+
+test-and-build:
+  stage: test
+  image: rust:latest
+  script:
+    - rustup component add rustfmt
+    # - cargo test
+    - cargo build --release
+  artifacts:
+    paths:
+      - target/release/my-sb-persistence
+
+publish:
+  stage: publish
+  services:
+    - docker:dind
+  variables:
+    DOCKER_DRIVER: overlay
+  script:
+    - ver=$(cat Cargo.toml | grep -m1 version | grep  -Eo '["\047].*["\047]' | tr -d '"')  
+    - echo $ver    
+    - echo "$DOCKER_LOGIN"
+    - echo "$DOCKER_PASSWORD" | docker login --username $DOCKER_LOGIN --password-stdin
+    - docker build -t ${DOCKER_IMAGE_TAG}:$ver .
+    - docker push ${DOCKER_IMAGE_TAG}:$ver
+  image: docker:latest
