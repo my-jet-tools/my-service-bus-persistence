@@ -14,6 +14,8 @@ pub enum NamespaceError {
     TooLong { len: usize },
     StartsWithDash,
     InvalidChar { invalid_char: char },
+    /// `con`, `nul`, `com1`... - see [`is_windows_device_name`].
+    WindowsDeviceName,
 }
 
 impl NamespaceError {
@@ -28,8 +30,43 @@ impl NamespaceError {
                 "Namespace contains invalid char '{}'. Allowed chars are [a-z0-9-]",
                 invalid_char
             ),
+            NamespaceError::WindowsDeviceName => {
+                "Namespace is the name of a Windows device, which can not be a folder".to_string()
+            }
         }
     }
+}
+
+/// The names Windows keeps for devices: a folder or a file named so - with any extension, in any
+/// case - is the device, not a folder or a file. A topic or a namespace named `nul` would have its
+/// messages written into nowhere, and one named `con` to the console. Only on Windows: elsewhere
+/// they are ordinary names, and the rules of a running deployment do not change.
+#[cfg(windows)]
+pub fn is_windows_device_name(name: &str) -> bool {
+    // `nul.txt` and `nul .x` are the device too: what counts is the part before the first dot,
+    // without trailing spaces.
+    let stem = name.split('.').next().unwrap_or(name).trim_end_matches(' ');
+    let upper = stem.to_ascii_uppercase();
+
+    if matches!(
+        upper.as_str(),
+        "CON" | "PRN" | "AUX" | "NUL" | "CONIN$" | "CONOUT$"
+    ) {
+        return true;
+    }
+
+    let mut chars = upper.chars();
+    let prefix: String = chars.by_ref().take(3).collect();
+    let rest: Vec<char> = chars.collect();
+
+    (prefix == "COM" || prefix == "LPT")
+        && rest.len() == 1
+        && matches!(rest[0], '0'..='9' | '\u{b9}' | '\u{b2}' | '\u{b3}')
+}
+
+#[cfg(not(windows))]
+pub fn is_windows_device_name(_name: &str) -> bool {
+    false
 }
 
 impl std::fmt::Display for NamespaceError {
@@ -78,6 +115,10 @@ impl Namespace {
             if !is_valid {
                 return Err(NamespaceError::InvalidChar { invalid_char });
             }
+        }
+
+        if is_windows_device_name(src) {
+            return Err(NamespaceError::WindowsDeviceName);
         }
 
         Ok(Self(src.to_string()))
@@ -183,6 +224,8 @@ pub enum TopicIdError {
     PathSeparator,
     RelativePath,
     InvalidChar { invalid_char: char },
+    /// `con`, `nul`, `com1`... - see [`is_windows_device_name`].
+    WindowsDeviceName,
 }
 
 impl TopicIdError {
@@ -197,6 +240,9 @@ impl TopicIdError {
             TopicIdError::RelativePath => "Topic id can not be '.' or '..'".to_string(),
             TopicIdError::InvalidChar { invalid_char } => {
                 format!("Topic id contains invalid char '{}'", invalid_char)
+            }
+            TopicIdError::WindowsDeviceName => {
+                "Topic id is the name of a Windows device, which can not be a folder".to_string()
             }
         }
     }
@@ -230,9 +276,19 @@ pub fn validate_topic_id(topic_id: &str) -> Result<(), TopicIdError> {
             return Err(TopicIdError::PathSeparator);
         }
 
+        // On Windows `D:orders` is a path relative to the current folder of drive D, and joining
+        // it to the data folder REPLACES the data folder - the separators above do not catch it.
+        if cfg!(windows) && invalid_char == ':' {
+            return Err(TopicIdError::PathSeparator);
+        }
+
         if invalid_char.is_control() || invalid_char == '\0' {
             return Err(TopicIdError::InvalidChar { invalid_char });
         }
+    }
+
+    if is_windows_device_name(topic_id) {
+        return Err(TopicIdError::WindowsDeviceName);
     }
 
     Ok(())
@@ -259,5 +315,21 @@ mod topic_id_tests {
         assert!(validate_topic_id("orders").is_ok());
         assert!(validate_topic_id("Orders-2024.v1_x").is_ok());
         assert!(validate_topic_id("a").is_ok());
+        // Close to a device name, and not one.
+        assert!(validate_topic_id("console").is_ok());
+        assert!(validate_topic_id("com10").is_ok());
+        assert!(validate_topic_id("mt5-deal").is_ok());
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn on_windows_a_topic_id_is_no_device_and_no_drive() {
+        for device in ["con", "NUL", "aux", "prn", "com1", "LPT9", "com\u{b9}", "nul.txt", "con ", "conin$"] {
+            assert!(validate_topic_id(device).is_err(), "{device}");
+        }
+        assert!(validate_topic_id("d:orders").is_err());
+        assert!(Namespace::parse(Some("nul")).is_err());
+        assert!(Namespace::parse(Some("com3")).is_err());
+        assert!(Namespace::parse(Some("alpha")).is_ok());
     }
 }

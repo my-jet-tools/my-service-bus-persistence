@@ -1,9 +1,8 @@
 use std::{sync::Arc, time::Duration};
 
-use chrono::Datelike;
 use my_logger::LogEventCtx;
 use my_service_bus::shared::sub_page::SubPageId;
-use rust_extensions::date_time::DateTimeAsMicroseconds;
+use rust_extensions::date_time::{DateTimeAsMicroseconds, DateTimeStruct};
 
 use crate::{
     app::{storage_layout, AppContext},
@@ -99,7 +98,8 @@ async fn delete_from_cold_storage(
         }
     }
 
-    let current_year = DateTimeAsMicroseconds::now().to_chrono_utc().year() as u32;
+    let now: DateTimeStruct = DateTimeAsMicroseconds::now().into();
+    let current_year = now.year as u32;
 
     for year in OLDEST_POSSIBLE_YEAR..=current_year + 1 {
         let file_name = storage_layout::get_year_index_file_name(Year::new(year));

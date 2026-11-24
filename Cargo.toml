@@ -70,6 +70,21 @@ ahash = "*"
 [target.'cfg(target_os = "linux")'.dependencies]
 tikv-jemallocator = "*"
 
+# Windows: the service as a native Windows service (src/win_service/), the way my-reverse-proxy
+# runs there - `--install` / `--start` / `--uninstall` / `--run-as-service` and `--settings <file>`.
+[target.'cfg(windows)'.dependencies]
+win-service-host = { tag = "0.2.0", git = "https://github.com/my-jet-tools/win-utils.git" }
+# The access lists `--install` checks, the process a release build closes to debuggers, and the
+# log file a service writes its console to.
+windows-sys = { version = "0.61", features = [
+    "Win32_Foundation",
+    "Win32_Security",
+    "Win32_Security_Authorization",
+    "Win32_System_Console",
+    "Win32_System_Diagnostics_Debug",
+    "Win32_System_Threading",
+] }
+
 [build-dependencies]
 # No `with-tls`: the proto is compiled from the local copy (see build.rs), so the build script
 # downloads nothing and does not pull fl-url in at all.

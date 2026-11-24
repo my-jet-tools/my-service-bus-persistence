@@ -16,8 +16,8 @@ impl MyServicePersistenceGrpc {
     }
 }
 
-pub async fn start(app: Arc<AppContext>, port: u16) -> Result<()> {
-    let addr = SocketAddr::from(([0, 0, 0, 0], port));
+pub async fn start(app: Arc<AppContext>, ip: std::net::IpAddr, port: u16) -> Result<()> {
+    let addr = SocketAddr::new(ip, port);
     let service = MyServicePersistenceGrpc::new(app);
 
     println!("Listening to {:?} as grpc endpoint", addr);
@@ -30,6 +30,7 @@ pub async fn start(app: Arc<AppContext>, port: u16) -> Result<()> {
         .context("Server error")
 }
 
+#[cfg(unix)]
 pub async fn start_unix_socket(app: Arc<AppContext>, unix_socket_addr: String) -> Result<()> {
     let unix_socket_addr = rust_extensions::file_utils::format_path(unix_socket_addr);
 
