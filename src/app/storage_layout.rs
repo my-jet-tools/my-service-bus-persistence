@@ -47,7 +47,17 @@ pub fn get_local_path(data_folder: &str, relative_path: &str) -> PathBuf {
         // The namespace and the topic id are validated at the API boundary, so this can not
         // trigger - but it is what physically stops a `..` from walking out of the data folder,
         // and it is cheap enough to keep as the last line of defence.
-        if part.is_empty() || part == "." || part == ".." {
+        //
+        // A part has to be ONE ordinary component as this platform reads it: on Windows `\` also
+        // separates, and `D:x` or `\\server\x` replaces the data folder when pushed - none of
+        // which a check for `/` and `..` sees.
+        let mut components = std::path::Path::new(part).components();
+        let is_one_normal_component = matches!(
+            (components.next(), components.next()),
+            (Some(std::path::Component::Normal(_)), None)
+        );
+
+        if part.is_empty() || part == "." || part == ".." || !is_one_normal_component {
             panic!(
                 "Refusing to build a path from '{}': the component '{}' escapes the data folder",
                 relative_path, part
@@ -158,10 +168,31 @@ mod tests {
             get_archive_relative_path(key, ArchiveFileNo::new(1)).as_str(),
         );
 
+        // Compared as paths: each part is pushed onto the data folder, so the separator between
+        // them is the platform's - `/` on Linux, `\` on Windows.
         assert_eq!(
-            "/var/data/alpha/orders/0000000000000000001.archive",
-            path.to_str().unwrap()
+            std::path::Path::new("/var/data")
+                .join("alpha")
+                .join("orders")
+                .join("0000000000000000001.archive"),
+            path
         );
+    }
+
+    #[test]
+    #[should_panic(expected = "escapes the data folder")]
+    fn a_part_which_walks_up_is_refused() {
+        get_local_path("/var/data", "alpha/../orders");
+    }
+
+    /// `\` separates, and `D:x` replaces the folder it is pushed onto - only on Windows.
+    #[cfg(windows)]
+    #[test]
+    fn on_windows_a_part_with_a_separator_or_a_drive_is_refused() {
+        for relative in [r"alpha/..\..\orders/active", "alpha/D:orders/active", r"alpha/\\server\share/active"] {
+            let refused = std::panic::catch_unwind(|| get_local_path(r"D:\data", relative));
+            assert!(refused.is_err(), "{relative}");
+        }
     }
 
     #[test]

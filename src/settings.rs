@@ -99,6 +99,18 @@ fn required(value: Option<String>, key: &str) -> String {
     }
 }
 
+/// The settings file named on the command line (`--settings <file>`, Windows), read instead of
+/// `$HOME/.myservicebus-persistence`.
+static EXPLICIT_SETTINGS_FILE: std::sync::OnceLock<String> = std::sync::OnceLock::new();
+
+/// Names the settings file for the rest of the process; called once, before the settings are read.
+#[cfg(windows)]
+pub fn set_settings_file(file: String) -> Result<(), String> {
+    EXPLICIT_SETTINGS_FILE
+        .set(file)
+        .map_err(|_| "The settings file is named once".to_string())
+}
+
 #[derive(Serialize, Deserialize, Debug)]
 pub struct SettingsModel {
     /// Root of every file this service owns. One root - the archive, the year index, the open tail
@@ -111,6 +123,11 @@ pub struct SettingsModel {
     pub listen_unix_socket: Option<String>,
 
     pub s3_conn_string: Option<String>,
+
+    /// The address the gRPC port (7124) and the HTTP port (7123) bind to. Absent: `0.0.0.0`.
+    /// Neither port asks who is calling - the gRPC one reads, writes and deletes every message -
+    /// so `127.0.0.1` is how the service is kept to its own machine.
+    pub listen_ip: Option<String>,
 
     /// The three folders the service used before everything moved under one root. Set the section
     /// only for the first start after upgrading; delete it once the migration has finished.
@@ -143,10 +160,36 @@ impl SettingsModel {
         Some(S3ConnectionSettings::parse(conn_string))
     }
 
+    /// Where the gRPC and HTTP ports listen: `listen_ip`, or every interface.
+    pub fn listen_ip(&self) -> std::net::IpAddr {
+        match self.listen_ip.as_deref() {
+            None => std::net::IpAddr::V4(std::net::Ipv4Addr::UNSPECIFIED),
+            Some(value) => value.trim().parse().unwrap_or_else(|err| {
+                panic!("listen_ip '{value}' is not an IP address: {err}");
+            }),
+        }
+    }
+
+    /// The `data` folder a settings file names, `~` expanded - what `--install` closes and gives
+    /// to the account of the service.
+    #[cfg(windows)]
+    pub fn data_folder_of(file: &std::path::Path) -> Result<String, String> {
+        let content = std::fs::read(file)
+            .map_err(|err| format!("The settings file {} can not be read: {err}", file.display()))?;
+
+        let settings: SettingsModel = serde_yaml::from_slice(content.as_slice())
+            .map_err(|err| format!("The settings file {} is not valid: {err}", file.display()))?;
+
+        Ok(format_folder(settings.data))
+    }
+
     pub async fn read() -> Self {
-        let filename = my_service_bus::shared::settings::get_settings_filename_path(
-            ".myservicebus-persistence",
-        );
+        let filename = match EXPLICIT_SETTINGS_FILE.get() {
+            Some(file) => file.clone(),
+            None => my_service_bus::shared::settings::get_settings_filename_path(
+                ".myservicebus-persistence",
+            ),
+        };
 
         println!("Reading settings file {}", filename);
 

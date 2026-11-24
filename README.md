@@ -185,6 +185,41 @@ Notes:
 | `7124`  | gRPC     | Persistence API consumed by the `my-service-bus` main node.            |
 | `listen_unix_socket` | gRPC | Optional Unix-socket variant of the gRPC API.                       |
 
+`listen_ip` (optional) is the address both ports bind to; absent, `0.0.0.0`. **Neither asks who is
+calling**: the gRPC port reads, writes and hard-deletes every message, the HTTP port reads them.
+`127.0.0.1` keeps the service to the machine of its bus.
+
+## Running on Windows
+
+The service builds and runs on Windows (`x86_64-pc-windows-msvc`), in the console or as a native
+Windows service - the command line and the install checks of my-reverse-proxy's Windows service:
+
+```powershell
+.\my-sb-persistence.exe --settings C:\my-sb\persistence\config\settings.yaml   # the console
+.\my-sb-persistence.exe --install --settings C:\my-sb\persistence\config\settings.yaml
+.\my-sb-persistence.exe --start      # --uninstall to remove it
+```
+
+- `--settings <file>` is read instead of `%HOME%\.myservicebus-persistence`; its folder is what
+  `~` stands for - in `data`, mostly.
+- `--install` registers the service `my-service-bus-persistence`, running as
+  `NT SERVICE\my-service-bus-persistence`: the settings and exe folders to read, `logs\` of the
+  settings folder and the `data` folder to write. Besides my-reverse-proxy's checks of the exe and
+  settings folders and the folders above them, it refuses a `data` folder that does not exist,
+  or that an account other than the system and the administrators can READ - it holds every
+  message.
+- Logs: `logs\my-service-bus-persistence.log` next to the settings. Stopping the service is the
+  graceful shutdown that writes the open tails to disk.
+- On Windows a topic id or a namespace may not be a device name (`con`, `nul`, `com1`, ...) nor
+  hold a `:` - either would leave the data folder; `get_local_path` refuses any part that is not
+  one plain path component.
+
+**The open tail of a topic is on disk only after a graceful shutdown** (see `active` below): a
+killed process, or a machine which loses its power, loses the messages of the sub page still
+being filled. On Linux as on Windows.
+
+The bus repository's `tools\windows\install.ps1` installs this service with its bus.
+
 ### HTTP endpoints (port 7123)
 
 - `GET /api/IsAlive` — liveness probe.

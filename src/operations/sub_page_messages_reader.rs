@@ -185,6 +185,7 @@ mod tests {
                     endpoint
                 )
             }),
+            listen_ip: None,
             legacy: None,
         })
         .await;

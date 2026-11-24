@@ -17,6 +17,8 @@ mod topic_data;
 mod topic_key;
 mod topics_snapshot;
 mod utils;
+#[cfg(windows)]
+mod win_service;
 
 use rust_extensions::MyTimer;
 mod typing;
@@ -48,8 +50,24 @@ static ALLOC: tikv_jemallocator::Jemalloc = tikv_jemallocator::Jemalloc;
 pub static malloc_conf: Option<&'static std::ffi::c_char> =
     Some(unsafe { &*c"background_thread:true,dirty_decay_ms:1000,muzzy_decay_ms:0".as_ptr() });
 
+/// Linux and macOS: the service in the console, until SIGTERM or Ctrl+C.
+#[cfg(not(windows))]
 #[tokio::main]
 async fn main() {
+    run_service(|_| {}).await;
+}
+
+/// Windows: the console run, and the service as a Windows service - see `win_service`.
+#[cfg(windows)]
+fn main() {
+    win_service::main();
+}
+
+/// The whole life of the service: it reads its settings, comes up, calls `on_started` once its
+/// timers and listeners run, waits for the shutdown (a signal, or `AppStates::set_shutting_down`)
+/// and writes what it holds to disk before it returns. One function, so that the timers live
+/// exactly as long as the service.
+pub async fn run_service(on_started: impl FnOnce(Arc<AppContext>)) {
     let settings = SettingsModel::read().await;
 
     // Two phases, both before anything reads the snapshot or opens a topic. The first only brings
@@ -124,14 +142,30 @@ async fn main() {
 
     tokio::spawn(operations::data_initializer::init(app.clone()));
 
-    tokio::spawn(grpc::server::start(app.clone(), 7124));
+    tokio::spawn(grpc::server::start(
+        app.clone(),
+        app.settings.listen_ip(),
+        7124,
+    ));
 
+    #[cfg(unix)]
     if let Some(unix_socket_addr) = app.settings.listen_unix_socket.clone() {
         tokio::spawn(grpc::server::start_unix_socket(
             app.clone(),
             unix_socket_addr,
         ));
     }
+
+    // There are no unix sockets to listen on here: a setting which asks for one is said out loud
+    // rather than ignored, and the TCP port serves.
+    #[cfg(not(unix))]
+    if let Some(unix_socket_addr) = app.settings.listen_unix_socket.as_ref() {
+        println!(
+            "listen_unix_socket '{unix_socket_addr}' is ignored: unix sockets are not supported on this platform"
+        );
+    }
+
+    on_started(app.clone());
 
     app.app_states.wait_until_shutdown().await;
 

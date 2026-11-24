@@ -8,7 +8,7 @@ use my_http_server::{
 use crate::app::AppContext;
 
 pub fn setup_server(app: &Arc<AppContext>, port: u16) -> HttpConnectionsCounter {
-    let mut http_server = MyHttpServer::new(SocketAddr::from(([0, 0, 0, 0], port)));
+    let mut http_server = MyHttpServer::new(SocketAddr::new(app.settings.listen_ip(), port));
 
     let controllers = Arc::new(super::builder::build(app));
 

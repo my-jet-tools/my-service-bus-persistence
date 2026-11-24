@@ -70,6 +70,7 @@ mod tests {
             delete_topic_secret_key: String::new(),
             listen_unix_socket: None,
             s3_conn_string: None,
+            listen_ip: None,
             legacy: None,
         })
         .await
