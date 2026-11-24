@@ -1,9 +1,6 @@
 use std::usize;
 
-//cSpell:disable
-use chrono::{Datelike, Timelike};
-//cSpell:enable
-use rust_extensions::date_time::DateTimeAsMicroseconds;
+use rust_extensions::date_time::{DateTimeAsMicroseconds, DateTimeStruct};
 
 use crate::typing::Year;
 
@@ -87,18 +84,20 @@ impl IndexByMinuteUtils {
         &self,
         dt_micros: DateTimeAsMicroseconds,
     ) -> (MinuteWithinYear, Year) {
-        let d = dt_micros.to_chrono_utc();
+        // rust-extensions dropped chrono (its 0.1.5 tag moved past `to_chrono_utc`): the UTC
+        // fields come from its own `DateTimeStruct` now.
+        let d: DateTimeStruct = dt_micros.into();
 
-        let month = d.month();
-        let day = d.day();
-        let hour = d.hour();
-        let minute = d.minute();
+        let month = d.month;
+        let day = d.day;
+        let hour = d.time.hour;
+        let minute = d.time.min;
 
         let minute =
             self.day_no_in_year[month as usize] + (day - 1) * MINUTES_PER_DAY + hour * 60 + minute
                 - 1;
 
-        (MinuteWithinYear::new(minute), (d.year() as u32).into())
+        (MinuteWithinYear::new(minute), (d.year as u32).into())
     }
 }
 

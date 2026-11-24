@@ -168,10 +168,16 @@ impl StatusModel {
             topics.push(topic_info_model)
         }
 
-        let mut sys_info = sysinfo::System::new_all();
-
-        // First we update all information of our system struct.
-        sys_info.refresh_all();
+        // sysinfo 0.40 answers a `Result` here: a machine it can not read reports zero memory
+        // rather than failing the status page.
+        let (totalmem, usedmem) = match sysinfo::System::new_all() {
+            Ok(mut sys_info) => {
+                // First we update all information of our system struct.
+                sys_info.refresh_all();
+                (sys_info.total_memory(), sys_info.used_memory())
+            }
+            Err(_) => (0, 0),
+        };
 
         let model = StatusModel {
             initialing: match app.app_states.is_initialized() {
@@ -182,10 +188,7 @@ impl StatusModel {
             active_operations: Vec::new(),
             awaiting_operations: Vec::new(),
             topics,
-            system: SystemStatusModel {
-                totalmem: sys_info.total_memory(),
-                usedmem: sys_info.used_memory(),
-            },
+            system: SystemStatusModel { totalmem, usedmem },
         };
 
         return model;
